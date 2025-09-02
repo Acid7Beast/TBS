@@ -61,8 +61,8 @@ A `Command` represents a specific action a unit can perform. The system uses a f
 The project is designed with scalability in mind. Future enhancements aim to leverage advanced C++ features for improved performance and developer experience:
 
 * **Compile-Time Concepts**: Implementing C++ **Concepts** as contracts will ensure that any types used with our templates adhere to specific requirements, catching errors at compile-time rather than runtime. This guarantees type safety and provides clearer error messages.
-* **Simplified API Integration**: By using adapters and factories, the `main.cpp` will be simplified to handle only high-level initialization. The complexity of translating API input into game commands will be fully encapsulated within the `io` and `Compatibilities` layers.
 * **Extendable unit base**: At any time any new unit with specific mechanics as 'Mine', 'Tower', and 'Crow' are possible to be added to the simulation.
+* **Fractions**: To make gameplay of two or more players need to add fractions of units to make a competition between them.
 
 ```mermaid
 graph TD
