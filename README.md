@@ -1,4 +1,3 @@
-```markdown
 # Turn-Based Tactical Simulation
 
 This project is a turn-based tactical game simulation with a clear, flexible, and scalable architecture. The core design principles are centered around **modularity**, **separation of concerns**, and the effective use of design patterns like **Polymorphism**, **Factories**, and the **Composite** pattern.
@@ -64,7 +63,6 @@ The project is designed with scalability in mind. Future enhancements aim to lev
 * **Compile-Time Concepts**: Implementing C++ **Concepts** as contracts will ensure that any types used with our templates adhere to specific requirements, catching errors at compile-time rather than runtime. This guarantees type safety and provides clearer error messages.
 * **Simplified API Integration**: By using adapters and factories, the `main.cpp` will be simplified to handle only high-level initialization. The complexity of translating API input into game commands will be fully encapsulated within the `io` and `Compatibilities` layers.
 * **Extendable unit base**: At any time any new unit with specific mechanics as 'Mine', 'Tower', and 'Crow' are possible to be added to the simulation.
-```
 
 ```mermaid
 graph TD
