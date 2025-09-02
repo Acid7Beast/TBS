@@ -16,7 +16,7 @@ namespace acid7beast::tbs
 	struct WorldContext;
 	struct BehaviourVisitor;
 
-	class Unit
+	class Unit final
 	{
 	public:
 		Unit(uint32_t unitId,
