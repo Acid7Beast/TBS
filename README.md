@@ -260,7 +260,7 @@ classDiagram
 
 The project is designed with scalability in mind. Future enhancements aim to leverage advanced C++ features for improved performance and developer experience:
 
-* **Compile-Time Concepts**: Implementing C++ **Concepts** as contracts will ensure that any types used with our templates adhere to specific requirements, catching errors at compile-time rather than runtime. This guarantees type safety and provides clearer error messages.
-* **Extendable unit base**: At any time any new unit with specific mechanics as 'Mine', 'Tower', and 'Crow' are possible to be added to the simulation.
+* **Compile-Time Concepts**: Implementing C++ **Concepts** as contracts will ensure that any types used with our templates adhere to specific requirements, catching errors at compile-time rather than runtime. For e.g. EventLoggerWrapper. This guarantees type safety and provides clearer error messages.
+* **Extendable Data-oriented unit base**: At any time any new unit with specific mechanics as 'Mine', 'Tower', and 'Crow' are possible to be added to the simulation via assets.
 * **Fractions**: To make gameplay of two or more players need to add fractions of units to make a competition between them.
 
