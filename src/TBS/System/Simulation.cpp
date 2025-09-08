@@ -2,9 +2,10 @@
 
 #include "Simulation.h"
 
-#include <TBS/Commands/CommandFactory.h>
-#include <TBS/Units/UnitFactory.h>
+#include <TBS/System/CommandFactory.h>
+#include <TBS/System/EntityFactory.h>
 #include <TBS/System/EventLogger.h>
+#include <TBS/ECS/Components/Unit/Behaviour/BehaviourComponent.h>
 
 #include <numeric>
 
@@ -20,56 +21,37 @@ namespace acid7beast::tbs
 		_worldContext.logger.LogMapCreated(_worldContext.tick, size);
 	}
 
-	void Simulation::SpawnUnit(BaseUnitFactory&& factory)
+	void Simulation::SpawnEntity(BaseEntityFactory&& factory)
 	{
-		factory.SpawnUnit(_worldContext);
+		factory.SpawnEntity(_registry, _worldContext);
 	}
 
-	void Simulation::EnqueueCommand(uint32_t unitId, BehaviourVisitor&& factory)
-	{
-		auto unitIter = _worldContext.units.find(unitId);
-		if (unitIter == _worldContext.units.end()) {
-			return;
-		}
-
-		Unit* unit = unitIter->second.get();
-		if (unit) {
-			unit->Behaviour().Visit(factory);
-		}
+	void Simulation::EnqueueCommand(EntityId id, BaseCommandFactory&& factory)
+	{ 
+		factory.SpawnCommand(_registry, _worldContext, id);
 	}
 
 	void Simulation::Run()
 	{
-		while (Tick() == true)
-			;
+		while (true)
+		{
+			if (Tick() == IsSimulationRunning::No) {
+				break;
+			}
+		}
 	}
 
-	bool Simulation::Tick()
+	IsSimulationRunning Simulation::Tick()
 	{
-		uint64_t activeUnits = 0;
-
 		++_worldContext.tick;
-		std::erase_if(
-			_worldContext.units,
-			[&worldContext = _worldContext, &activeUnits](auto& pair) {
-				auto& unit = pair.second;
-				if (!unit) {
-					return true;
-				}
 
-				ActingState status = unit->Act(worldContext);
-				if (status == ActingState::Dead) {
-					return true;
-				}
+		const IsSimulationRunning preCleanupRunning = _behaviorsSystem.Update(_registry, _worldContext);
 
-				if (status == ActingState::Actioning) {
-					++activeUnits;
-				}
+		_cleanUpSystem.Update(_registry, _worldContext);
 
-				return false;
-			});
-
-		// Continue simulation untill has units and at least one unid can act.
-		return activeUnits > 0 && _worldContext.units.size() > 1;
+		const auto& behaviourStorage = _registry.GetStorage<BehaviourComponent>();
+		const bool hasMultipleUnits = (behaviourStorage.Size() > 1);
+		const bool isSimulationRunning = (preCleanupRunning == IsSimulationRunning::Yes) && hasMultipleUnits;
+		return static_cast<IsSimulationRunning>(isSimulationRunning);
 	}
 } // namespace acid7beast::tbs

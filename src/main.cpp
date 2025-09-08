@@ -49,12 +49,12 @@ int main(int argc, char** argv)
 		.add<io::SpawnSwordsman>(
 			[&simulation](auto command) {
 				printDebug(std::cout, command);
-				simulation.SpawnUnit(acid7beast::tbs::UnitFactory<io::SpawnSwordsman> { std::move(command) });
+				simulation.SpawnEntity(acid7beast::tbs::EntityFactory<io::SpawnSwordsman> { std::move(command) });
 			})
 		.add<io::SpawnHunter>(
 			[&simulation](auto command) {
 				printDebug(std::cout, command);
-				simulation.SpawnUnit(acid7beast::tbs::UnitFactory<io::SpawnHunter> { std::move(command) });
+				simulation.SpawnEntity(acid7beast::tbs::EntityFactory<io::SpawnHunter> { std::move(command) });
 			})
 		.add<io::March>(
 			[&simulation](auto command) {

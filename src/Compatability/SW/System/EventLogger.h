@@ -21,38 +21,38 @@ namespace acid7beast::tbs
 	}
 
 	template<>
-	inline void EventLoggerWrapper<sw::EventLog>::LogMarchEnded(uint64_t tick, uint32_t unitId, const IVector2& destination)
+	inline void EventLoggerWrapper<sw::EventLog>::LogMarchEnded(uint64_t tick, EntityId id, const IVector2& destination)
 	{
-		_logger.log(tick, sw::io::MarchEnded { unitId, static_cast<uint32_t>(destination.x), static_cast<uint32_t>(destination.y) });
+		_logger.log(tick, sw::io::MarchEnded { static_cast<uint32_t>(id), static_cast<uint32_t>(destination.x), static_cast<uint32_t>(destination.y) });
 	}
 
 	template<>
-	inline void EventLoggerWrapper<sw::EventLog>::LogMarchStarted(uint64_t tick, uint32_t unitId, const IVector2& source, const IVector2& destination)
+	inline void EventLoggerWrapper<sw::EventLog>::LogMarchStarted(uint64_t tick, EntityId id, const IVector2& source, const IVector2& destination)
 	{
-		_logger.log(tick, sw::io::MarchStarted { unitId, static_cast<uint32_t>(source.x), static_cast<uint32_t>(source.y), static_cast<uint32_t>(destination.x), static_cast<uint32_t>(destination.y) });
+		_logger.log(tick, sw::io::MarchStarted { static_cast<uint32_t>(id), static_cast<uint32_t>(source.x), static_cast<uint32_t>(source.y), static_cast<uint32_t>(destination.x), static_cast<uint32_t>(destination.y) });
 	}
 
 	template<>
-	inline void EventLoggerWrapper<sw::EventLog>::LogUnitAttacked(uint64_t tick, uint32_t attackerUnitId, uint32_t targetUnitId, uint32_t damage, uint32_t targetHp)
+	inline void EventLoggerWrapper<sw::EventLog>::LogEntityAttacked(uint64_t tick, EntityId attackerId, EntityId targetId, uint32_t damage, uint32_t targetHp)
 	{
-		_logger.log(tick, sw::io::UnitAttacked { attackerUnitId, targetUnitId, damage, targetHp });
+		_logger.log(tick, sw::io::UnitAttacked { static_cast<uint32_t>(attackerId), static_cast<uint32_t>(targetId), damage, targetHp });
 	}
 
 	template<>
-	inline void EventLoggerWrapper<sw::EventLog>::LogUnitDied(uint64_t tick, uint32_t unitId)
+	inline void EventLoggerWrapper<sw::EventLog>::LogEntityDied(uint64_t tick, EntityId id)
 	{
-		_logger.log(tick, sw::io::UnitDied { unitId });
+		_logger.log(tick, sw::io::UnitDied { static_cast<uint32_t>(id) });
 	}
 
 	template<>
-	inline void EventLoggerWrapper<sw::EventLog>::LogUnitMoved(uint64_t tick, uint32_t unitId, const IVector2& newPosition)
+	inline void EventLoggerWrapper<sw::EventLog>::LogEntityMoved(uint64_t tick, EntityId id, const IVector2& newPosition)
 	{
-		_logger.log(tick, sw::io::UnitMoved { unitId, static_cast<uint32_t>(newPosition.x), static_cast<uint32_t>(newPosition.y) });
+		_logger.log(tick, sw::io::UnitMoved { static_cast<uint32_t>(id), static_cast<uint32_t>(newPosition.x), static_cast<uint32_t>(newPosition.y) });
 	}
 
 	template<>
-	inline void EventLoggerWrapper<sw::EventLog>::LogUnitSpawned(uint64_t tick, uint32_t unitId, const std::string& unitType, const IVector2& position)
+	inline void EventLoggerWrapper<sw::EventLog>::LogEntitySpawned(uint64_t tick, EntityId id, const std::string& unitType, const IVector2& position)
 	{
-		_logger.log(tick, sw::io::UnitSpawned { unitId, unitType, static_cast<uint32_t>(position.x), static_cast<uint32_t>(position.y) });
+		_logger.log(tick, sw::io::UnitSpawned { static_cast<uint32_t>(id), unitType, static_cast<uint32_t>(position.x), static_cast<uint32_t>(position.y) });
 	}
 } // namespace acid7beast::tbs

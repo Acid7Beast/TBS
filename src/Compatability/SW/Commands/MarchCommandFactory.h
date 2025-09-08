@@ -1,36 +1,29 @@
 ﻿// (c) 2025 Acid7Beast. Use with wisdom.
 #pragma once
 
-#include <TBS/Commands/CommandComposite.h>
-#include <TBS/Commands/CommandFactory.h>
-#include <TBS/Commands/DistantAttackCommand.h>
-#include <TBS/Commands/MeleeAttackCommand.h>
-#include <TBS/Commands/MoveCommand.h>
-#include <TBS/Units/Components/Behaviour/HunterBehaviourComponent.h>
-#include <TBS/Units/Components/Behaviour/SwordsmanBehaviourComponent.h>
+#include <TBS/System/CommandFactory.h>
+
+#include <TBS/ECS/Components/Unit/Behaviour/Commands/CommandComposite.h>
+#include <TBS/ECS/Components/Unit/Behaviour/Commands/AttackCommand.h>
+#include <TBS/ECS/Components/Unit/Behaviour/Commands/MoveCommand.h>
 
 #include <IO/Commands/March.hpp>
 
 namespace acid7beast::tbs
 {
-	void CommandFactory<sw::io::March>::Visit(SwordsmanBehaviourComponent& behaviour)
+	void CommandFactory<sw::io::March>::SpawnCommand(Registry& registry, WorldContext& worldContext, EntityId id)
 	{
+		BehaviourComponent* behaviourComponent = registry.GetComponent<BehaviourComponent>(id);
+		if (behaviourComponent == nullptr) {
+			return;
+		}
+
 		std::unique_ptr<CommandComposite> command = std::make_unique<CommandComposite>();
-		command->AddCommand(std::make_unique<MeleeAttackCommand>());
+		command->AddCommand(std::make_unique<AttackCommand>());
 		command->AddCommand(
 			std::make_unique<MoveCommand>(IVector2 { _params.targetX, _params.targetY }));
 
-		behaviour.AddCommand(std::move(command));
+		behaviourComponent->AddCommand(std::move(command));
 	}
 
-	void CommandFactory<sw::io::March>::Visit(HunterBehaviourComponent& behaviour)
-	{
-		std::unique_ptr<CommandComposite> command = std::make_unique<CommandComposite>();
-		command->AddCommand(std::make_unique<MeleeAttackCommand>());
-		command->AddCommand(std::make_unique<DistantAttackCommand>());
-		command->AddCommand(
-			std::make_unique<MoveCommand>(IVector2 { _params.targetX, _params.targetY }));
-
-		behaviour.AddCommand(std::move(command));
-	}
 } // namespace acid7beast::tbs

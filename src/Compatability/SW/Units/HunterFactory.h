@@ -1,35 +1,39 @@
 ﻿// (c) 2025 Acid7Beast. Use with wisdom.
 #pragma once
 
-#include <TBS/Units/UnitFactory.h>
-#include <TBS/Units/Components/Behaviour/HunterBehaviourComponent.h>
-#include <TBS/Units/Components/Movement/InfantryMovementComponent.h>
-#include <TBS/Units/Components/Health/InfantryHealthComponent.h>
-#include <TBS/Units/Components/Attack/DistantAttackComponent.h>
+#include <TBS/System/EntityFactory.h>
+#include <TBS/System/WorldContext.h>
+#include <TBS/ECS/Components/Unit/Behaviour/BehaviourComponent.h>
+#include <TBS/ECS/Components/Unit/Movement/MovementComponent.h>
+#include <TBS/ECS/Components/Unit/Health/HealthComponent.h>
+#include <TBS/ECS/Components/Unit/Attack/AttackComponent.h>
 
 #include <IO/Commands/SpawnHunter.hpp>
 
 namespace acid7beast::tbs
 {
+	// New entity-based specialization
 	template<>
-	inline void UnitFactory<sw::io::SpawnHunter>::SpawnUnit(WorldContext& worldContext)
+	inline void EntityFactory<sw::io::SpawnHunter>::SpawnEntity(Registry& registry, WorldContext& worldContext)
 	{
-		std::unique_ptr<BaseBehaviourComponent> behaviourComponent = std::make_unique<HunterBehaviourComponent>();
-		std::unique_ptr<BaseMovementComponent> movementComponent = std::make_unique<InfantryMovementComponent>(IVector2 { _params.x, _params.y });
-		std::unique_ptr<BaseHealthComponent> healthComponent = std::make_unique<InfantryHealthComponent>(_params.hp);
-		std::unique_ptr<BaseAttackComponent> attackComponent = std::make_unique<DistantAttackComponent>(_params.range, _params.strength, _params.agility);
-
-		std::unique_ptr<Unit> unit = std::make_unique<Unit>(_params.unitId, std::move(behaviourComponent), std::move(movementComponent), std::move(healthComponent), std::move(attackComponent));
-
-		const IVector2& unitPosition = unit->Movement().GetPosition();
-		if (worldContext.map.IsCellOccupied(unitPosition)) {
+		const IVector2& position = IVector2 { _params.x, _params.y };
+		if (worldContext.map.IsCellOccupied(position)) {
 			throw std::runtime_error("Cell is occupied");
 			return;
 		}
 
-		const uint32_t unitId = unit->GetId();
-		worldContext.units.emplace(unitId, std::move(unit));
-		worldContext.map.PlaceUnit(unitId, unitPosition);
-		worldContext.logger.LogUnitSpawned(worldContext.tick, _params.unitId, _params.Name, unitPosition);
+		Durability health = { _params.hp, _params.hp };
+		Weapon sword = { 1, 1, _params.strength, DamageReachability::Melee };
+		Weapon bow = { 2, _params.range, _params.agility, DamageReachability::Distant };
+
+		const uint32_t id = registry.CreateEntity(_params.unitId);
+		registry.AddComponent(id, MovementComponent { position });
+		registry.AddComponent(id, BehaviourComponent {});
+		registry.AddComponent(id, HealthComponent { { std::move(health) } });
+		registry.AddComponent(id, AttackComponent { { std::move(sword), std::move(bow) } });
+
+		worldContext.map.PlaceEntity(id, position);
+		worldContext.logger.LogEntitySpawned(worldContext.tick, _params.unitId, _params.Name, position);
+		worldContext.turnOrder.push_back(id);
 	}
 } // namespace acid7beast::tbs

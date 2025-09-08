@@ -1,18 +1,18 @@
 # Turn-Based Tactical Simulation
 
-This project is a turn-based tactical game simulation with a clear, flexible, and scalable architecture. The core design principles are centered around **modularity**, **separation of concerns**, and the effective use of design patterns like **Polymorphism**, **Factories**, and the **Composite** pattern.
+This project is a turn-based tactical game simulation built around an ECS (Entity-Component-System) architecture. The core design principles are **modularity**, **separation of concerns**, and leveraging **data-oriented design** with ECS while still using patterns like **Command** and lightweight **CRTP** wrappers where helpful.
 
 ---
 
-## 1. Core Concepts & Architecture
+## 1. Core Concepts & Architecture (ECS)
 
 The simulation's architecture is built on a clear separation of layers, ensuring the core logic remains independent of the external API and data models. The system's flow can be understood through its primary components:
 
-* **API Layer (`sw::io`)**: This layer acts as an adapter, translating raw input from external sources into a format usable by the simulation. It contains data structures for commands (`March`, `CreateMap`) and a parser (`CommandParser`) that handles this translation.
+* **API Layer**: Adapters that translate raw input into simulation commands and data.
 
-* **Core Simulation Layer (`sw::tbs`)**: This is the heart of the simulation. It contains the game loop (`Simulation`), the world state (`WorldContext`), and the core logic for all units and commands. It is agnostic to the API layer, interacting only with abstract interfaces.
+* **Core Simulation Layer (`acid7beast::tbs`)**: Contains the game loop (`Simulation`), world state (`WorldContext`), `Registry` (entities/components), `Systems`, and `EventBus`.
 
-* **Compatibility Layer (`Compatibilities`)**: This layer serves as a bridge, providing factories and wrappers that allow the core simulation to be extended without modifying its fundamental code. This is where the **Curiously Recurring Template Pattern (CRTP)** is heavily utilized to enable powerful, static polymorphism with zero runtime overhead.
+* **Compatibility Layer**: Bridges external models to the core ECS types using lightweight wrappers.
 
 ```mermaid
 graph TD
@@ -42,35 +42,27 @@ The simulation is built from several interconnected modules, each with a specifi
 
 The world state is managed by the `WorldContext`. It acts as a central container for all game data. The `Map` component handles unit positions and provides spatial queries, allowing for efficient searches for units within a specific range or cone distance.
 
-### Units
+### ECS: Entities, Components, Systems
 
-All active entities in the simulation are represented by `Units`.
+* **Entities**: Identified by `EntityId` and managed by `Registry`. Entities are just IDs.
 
-* **`Unit`**: A concrete class that acts as a container for components. It has no game logic of its own.
+* **Components**: Plain data/logic containers attached to entities via `Registry` storages. Core components:
+  * **BehaviourComponent**: Holds and executes queued commands per entity.
+  * **MovementComponent**: Position/speed and moves entities on `Map`.
+  * **HealthComponent**: Durability segments and damage processing.
+  * **AttackComponent**: Weapons and reachability definitions.
 
-* **Components**: These are classes that contain specific data and logic, allowing for flexible unit creation. The core components are:
-  * **Behaviour**: Defines the high-level actions of a unit.
-  * **Movement**: Manages a unit's position and speed.
-  * **Health**: Tracks a unit's health and processes damage.
-  * **Attack**: Determines a unit's damage and attack range.
+* **Systems**: Operate over `Registry` and `WorldContext`:
+  * **BehaviorsSystem**: Advances entity behavior via commands.
+  * **CleanupSystem**: Removes dead entities and cleans transient state.
 
-* **`UnitFactory`**: This factory uses CRTP to provide a unified interface for spawning different types of units, centralizing the creation logic. It assembles universal `Unit` objects by providing them with the correct set of components.
+### Factories & Commands
 
-### Commands
+Factories operate only through `Simulation`:
+* `EntityFactory` builds entity components inside `Registry` using `WorldContext` (both provided by `Simulation`).
+* `CommandFactory` creates `BaseCommand` instances for a target entity. `Simulation` enqueues the resulting commands into that entity's `BehaviourComponent`.
 
-A `Command` represents a specific action a unit can perform. The system uses a flexible and extensible approach for managing these actions.
-
-* **`Command` (BaseCommand)**: The interface for all unit actions.
-
-* **`CommandComposite`**: A realization of the **Composite pattern**. It allows complex behaviors to be built from simple commands, effectively serving as a **Behavior Tree** for units. It encapsulates a sequence or selection of actions.
-
-* **Specific Commands**:
-  * **`MoveCommand`**: Updates a unit's position if the target cell is free.
-  * **`BaseAttackCommand`**: An abstract class that handles the core logic for checking and attempting to attack nearby units. It is specialized by different attack types.
-  * **`MeleeAttackCommand`**: Specializes `BaseAttackCommand` by overriding the unit selection for melee range.
-  * **`DistantAttackCommand`**: Specializes `BaseAttackCommand` by overriding the unit selection for ranged attacks.
-
-* **`CommandFactory`**: Utilizes CRTP to enqueue commands for units, ensuring that commands are created and assigned correctly based on the unit's capabilities.
+Commands represent actions executed by `BehaviourComponent`. The interface is `BaseCommand`; implementations include `MoveCommand`, `AttackCommand`, and composites via `CommandComposite`.
 
 ```mermaid
 classDiagram
@@ -80,17 +72,18 @@ classDiagram
         class Simulation {
             -WorldContext _worldContext
             +void CreateWorld(const IVector2& size)
-            +void SpawnUnit(BaseUnitFactory&& factory)
-            +void QueueCommand(BaseCommandFactory&& factory)
+            +void SpawnEntity(BaseEntityFactory&& factory)
+            +void EnqueueCommand(EntityId id, BaseCommandFactory&& factory)
             +void Run()
             -void Tick()
         }
         
         class WorldContext {
-            -Map map
-            -Unit[] units
             -BaseEventLogger logger
             -uint64_t tick
+            -Map map
+            -EventBus eventBus
+            -vector~EntityId~ turnOrder
         }
 
         class Map {
@@ -108,107 +101,138 @@ classDiagram
         
         WorldContext "1" -- "1" Map : has
         WorldContext "1" -- "1" BaseEventLogger : has
-        WorldContext "1" -- "*" Unit : has
+        WorldContext "1" -- "1" EventBus : has
         Simulation "1" -- "1" WorldContext : manages
     end
 
-    subgraph Units
-        class Unit {
-            -uint32_t _unitId
-            -unique_ptr~BaseBehaviourComponent~ _behaviourComponent
-            -unique_ptr~BaseMovementComponent~ _movementComponent
-            -unique_ptr~BaseHealthComponent~ _healthComponent
-            -unique_ptr~BaseAttackComponent~ _attackComponent
-            -unique_ptr~BaseCommand~ _command
-            +Unit(...) Unit
-            +ActingState Act(WorldContext& worldContext)
-            +uint32_t GetId() const
-            +BaseBehaviourComponent& Behaviour()
-            +BaseMovementComponent& Movement()
-            +BaseHealthComponent& Health()
-            +BaseAttackComponent& Attack()
+    subgraph Components
+        class BehaviourComponent {
+            +ActingState Act(Registry&, WorldContext&, EntityId)
+            +void AddCommand(unique_ptr~BaseCommand~)
+            +void ClearCommands()
+            +bool HasCommands() const
         }
-        
-        Unit "1" o-- "1" BaseBehaviourComponent : has
-        Unit "1" o-- "1" BaseMovementComponent : has
-        Unit "1" o-- "1" BaseHealthComponent : has
-        Unit "1" o-- "1" BaseAttackComponent : has
-        BaseBehaviourComponent "1" o-- "*" BaseCommand : has
+        class MovementComponent {
+            +void MoveTo(WorldContext&, EntityId, IVector2)
+            +void RemoveFromWorld(WorldContext&, EntityId)
+            +IVector2 GetPosition() const
+            +int GetMovementSpeed() const
+            +TravelMethod GetTravelMethod() const
+        }
+        class HealthComponent {
+            +DamageState AcceptAttack(int)
+            +void AcceptHeal(int)
+            +bool IsAlive() const
+            +uint32_t GetHealth() const
+        }
+        class AttackComponent {
+            +const vector~Weapon~& GetWeapons() const
+        }
+    end
 
-        class BaseBehaviourComponent {
+    subgraph Systems
+        class BehaviorsSystem {
+            +IsSimulationRunning Update(Registry&, WorldContext&)
+        }
+        class CleanupSystem {
+            +void Update(Registry&, WorldContext&)
+        }
+        BehaviorsSystem ..> BehaviourComponent : updates
+        CleanupSystem ..> HealthComponent : reads
+        CleanupSystem ..> MovementComponent : updates
+    end
+
+    %% Systems managed by Simulation
+    Simulation "1" -- "1" BehaviorsSystem : manages
+    Simulation "1" -- "1" CleanupSystem : manages
+    Simulation "1" -- "1" Registry : manages
+
+    %% Factories interact only via Simulation
+    class EntityFactory {
+        -- abstract factory --
+    }
+    class CommandFactory {
+        -- abstract factory --
+    }
+    Simulation ..> EntityFactory : accepts
+    Simulation ..> CommandFactory : accepts
+    EntityFactory ..> Registry : builds components (via Simulation)
+    EntityFactory ..> WorldContext : uses (via Simulation)
+    CommandFactory ..> BaseCommand : creates
+    Simulation ..> BehaviourComponent : enqueues commands
+
+    %% (Old OOP-style Commands section removed in favor of ECS Commands below)
+    
+    subgraph Events
+        class BaseEventStorage {
             <<interface>>
-            +void AddCommand(unique_ptr~BaseCommand~ command)
+            +void ClearEvents()
+        }
+        class EventQueue {
+            +void AddEvent(EventType)
+            +void ClearEvents()
+            +vector~EventType~& GetEvents()
+        }
+        class EventBus {
+            +void PushEvent(EventType)
+            +void ClearEvents~EventType~()
+            +vector~EventType~& GetEvents()
         }
 
-        class SwordsmanBehaviourComponent
-        class HunterBehaviourComponent
-        BaseBehaviourComponent <|-- SwordsmanBehaviourComponent
-        BaseBehaviourComponent <|-- HunterBehaviourComponent
-        
-        class BaseMovementComponent {
+        EventQueue ..|> BaseEventStorage
+        EventBus ..> EventQueue : creates
+        EventBus "1" o-- "*" BaseEventStorage : queues
+    end
+
+    subgraph ECS
+        class IComponentStorage {
             <<interface>>
-            +IVector2 GetPosition()
-            +void MoveTo(WorldContext& worldContext, const IVector2& pos)
         }
-        BaseMovementComponent <|-- InfantryMovementComponent
-
-        class BaseHealthComponent {
-            <<interface>>
-            +uint32_t GetHealth()
-            +DamageState AcceptAttack(WorldContext& worldContext, int damage, DamageReachability reachability)
-        }
-        BaseHealthComponent <|-- InfantryHealthComponent
-
-        class BaseAttackComponent {
-            <<interface>>
-            +uint32_t GetAttackDamage(DamageReachability reachability)
-            +uint32_t GetAttackDistance()
-        }
-        BaseAttackComponent <|-- MeleeAttackComponent
-        BaseAttackComponent <|-- DistantAttackComponent
-        
-        class UnitFactory {
-            -- CRTP --
-            +unique_ptr~Unit~ SpawnUnit()
+        class ComponentStorage
+        class Registry {
+            +EntityId CreateEntity()
+            +void DestroyEntity(EntityId)
+            +T* GetComponent~T~(EntityId)
+            +void AddComponent~T~(EntityId, T)
+            +void RemoveComponent~T~(EntityId)
         }
 
-        UnitFactory ..> Unit : creates
-        UnitFactory ..> BaseBehaviourComponent : depends on
-        UnitFactory ..> BaseMovementComponent : depends on
-        UnitFactory ..> BaseHealthComponent : depends on
-        UnitFactory ..> BaseAttackComponent : depends on
+        ComponentStorage ..|> IComponentStorage
+        Registry ..> ComponentStorage : creates
+        Registry "1" o-- "*" IComponentStorage : stores
     end
 
     subgraph Commands
-        class CommandFactory {
-            -- CRTP --
-            +unique_ptr~BaseCommand~ CreateCommandForUnit(Unit& unit)
-            +void Visit(SwordsmanBehaviourComponent&)
-            +void Visit(HunterBehaviourComponent&)
-        }
-        
-        class CommandComposite {
-            -BaseCommand[] _commands
-            +void AddCommand(BaseCommand& command)
-        }
-
         class BaseCommand {
             <<interface>>
-            +void Execute(WorldContext& worldContext, Unit& unit)
+            +void Execute(Registry&, WorldContext&, EntityId)
+        }
+        class CommandComposite {
+            +void AddCommand(BaseCommand&)
+        }
+        class MoveCommand
+        class AttackCommand
+        class CommandFactory {
+            -- CRTP --
+            +unique_ptr~BaseCommand~ CreateCommandForEntity(EntityId)
         }
 
-        CommandFactory ..> BaseBehaviourComponent : depends on
-        CommandFactory ..> CommandComposite : creates
         CommandComposite "1" *-- "*" BaseCommand : aggregates
-
         BaseCommand <|.. CommandComposite
         BaseCommand <|.. MoveCommand
-        BaseCommand <|.. BaseAttackCommand
+        BaseCommand <|.. AttackCommand
 
-        BaseAttackCommand <|-- MeleeAttackCommand
-        BaseAttackCommand <|-- DistantAttackCommand
+        %% Behaviour queues commands
+        BehaviourComponent "1" o-- "*" BaseCommand : queues
+        Simulation ..> BehaviourComponent : enqueues
+        CommandFactory ..> BaseCommand : creates
+
+        %% Commands act on components
+        MoveCommand ..> MovementComponent : moves
+        AttackCommand ..> AttackComponent : attacks
+        AttackCommand ..> HealthComponent : damages/heals
     end
-    
+
     subgraph Logging
         class EventLog
         class EventLoggerWrapper {

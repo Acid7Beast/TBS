@@ -7,8 +7,8 @@
 
 namespace acid7beast::tbs
 {
-	class Unit;
-
+	using EntityId = uint32_t;
+	
 	struct IVector2
 	{
 		int32_t x;
@@ -29,6 +29,4 @@ namespace acid7beast::tbs
 		inline bool operator==(const IVector2& other) const { return x == other.x && y == other.y; }
 		inline IVector2 operator-(const IVector2& other) const { return { x - other.x, y - other.y }; }
 	};
-
-	using UnitTable = std::unordered_map<uint32_t, std::unique_ptr<Unit>>;
 } // namespace acid7beast::tbs
