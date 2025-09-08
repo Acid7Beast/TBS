@@ -24,7 +24,7 @@ namespace acid7beast::tbs
 	{
 		// Life-circle management.
 	public:
-		CommandFactory(CommandParams&& params)
+		explicit CommandFactory(CommandParams&& params)
 			: _params(std::move(params))
 		{}
 

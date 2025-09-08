@@ -1,10 +1,6 @@
 // (c) 2025 Acid7Beast. Use with wisdom.
 #pragma once
 
-#include <TBS/ECS/Common.h>
-
-#include <vector>
-
 namespace acid7beast::tbs
 {
 	class BaseEventStorage
@@ -13,7 +9,7 @@ namespace acid7beast::tbs
 	public:
 		virtual ~BaseEventStorage() = default;
 
-		// Public virtualinterface methods.
+		// Public virtual interface methods.
 	public:
 		virtual void ClearEvents() = 0;
 	};

@@ -20,7 +20,7 @@ namespace acid7beast::tbs
 	{
 		// Life-circle management.
 	public:
-		inline EntityFactory(SpawnParams&& params)
+		inline explicit EntityFactory(SpawnParams&& params)
 			: _params(std::move(params))
 		{}
 

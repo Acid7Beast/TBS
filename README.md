@@ -1,6 +1,6 @@
 # Turn-Based Tactical Simulation
 
-This project is a turn-based tactical game simulation built around an ECS (Entity-Component-System) architecture. The core design principles are **modularity**, **separation of concerns**, and leveraging **data-oriented design** with ECS while still using patterns like **Command** and lightweight **CRTP** wrappers where helpful.
+This project is a turn-based tactical game simulation built around an ECS (Entity-Component-System) architecture. The core design principles are **modularity**, **separation of concerns**, and leveraging **data-oriented design** with ECS while still using patterns like **Command** where helpful.
 
 ---
 
