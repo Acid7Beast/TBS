@@ -5,8 +5,6 @@
 
 namespace acid7beast::tbs
 {
-	using EntityId = uint32_t;
-
 	class Registry;
 	class EventBus;
 } // namespace acid7beast::tbs

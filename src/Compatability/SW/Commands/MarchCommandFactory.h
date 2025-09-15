@@ -6,6 +6,7 @@
 #include <TBS/ECS/Components/Unit/Behaviour/Commands/CommandComposite.h>
 #include <TBS/ECS/Components/Unit/Behaviour/Commands/AttackCommand.h>
 #include <TBS/ECS/Components/Unit/Behaviour/Commands/MoveCommand.h>
+#include <TBS/ECS/Systems/Unit/BehaviourSystem.h>
 
 #include <IO/Commands/March.hpp>
 
@@ -23,7 +24,7 @@ namespace acid7beast::tbs
 		command->AddCommand(
 			std::make_unique<MoveCommand>(IVector2 { _params.targetX, _params.targetY }));
 
-		behaviourComponent->AddCommand(std::move(command));
+		BehaviourSystem::AddCommand(*behaviourComponent, std::move(command));
 	}
 
 } // namespace acid7beast::tbs

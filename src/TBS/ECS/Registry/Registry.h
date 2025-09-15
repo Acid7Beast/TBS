@@ -1,8 +1,7 @@
 // (c) 2025 Acid7Beast. Use with wisdom.
 #pragma once
 
-#include "../Common.h"
-
+#include <TBS/Common.h>
 #include <TBS/ECS/Components/ComponentStorage.h>
 #include <TBS/ECS/Components/IComponentStorage.h>
 

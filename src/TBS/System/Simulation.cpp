@@ -45,7 +45,7 @@ namespace acid7beast::tbs
 	{
 		++_worldContext.tick;
 
-		const IsSimulationRunning preCleanupRunning = _behaviorsSystem.Update(_registry, _worldContext);
+		const IsSimulationRunning preCleanupRunning = _behaviourSystem.Update(_registry, _worldContext);
 
 		_cleanUpSystem.Update(_registry, _worldContext);
 

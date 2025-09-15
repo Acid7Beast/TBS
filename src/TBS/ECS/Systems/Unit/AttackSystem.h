@@ -1,17 +1,17 @@
 // (c) 2025 Acid7Beast. Use with wisdom.
 #pragma once
 
-#include <TBS/Common.h>
 #include <TBS/ECS/Components/Unit/Common.h>
 
 namespace acid7beast::tbs
 {
+	class Registry;
 	struct WorldContext;
 
-	struct MovementComponent final
+	class AttackSystem final
 	{
-		IVector2 position;
-		int speed = 1;
-		int groundDistance = 0;
+		// Public interface methods.
+	public:
+		void Update(Registry& registry, WorldContext& worldContext);
 	};
 } // namespace acid7beast::tbs

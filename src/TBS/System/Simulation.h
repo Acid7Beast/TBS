@@ -36,7 +36,7 @@ namespace acid7beast::tbs
 	private:
 		Registry _registry;
 		WorldContext _worldContext;
-		BehaviorsSystem _behaviorsSystem;
+		BehaviourSystem _behaviourSystem;
 		CleanupSystem _cleanUpSystem;
 	};
 } // namespace acid7beast::tbs

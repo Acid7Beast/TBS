@@ -15,18 +15,8 @@ namespace acid7beast::tbs
 		DamageReachability reachability;
 	};
 
-	class AttackComponent final
+	struct AttackComponent final
 	{
-		// Life-cycle management.
-	public:
-		AttackComponent(std::vector<Weapon> weapons);
-
-		// Public interface methods.
-	public:
-		inline const std::vector<Weapon>& GetWeapons() const { return _weapons; }
-
-		// Private state members.
-	private:
-		std::vector<Weapon> _weapons;
+		std::vector<Weapon> weapons;
 	};
 } // namespace acid7beast::tbs

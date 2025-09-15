@@ -5,6 +5,7 @@
 #include <TBS/System/WorldContext.h>
 #include <TBS/ECS/Registry/Registry.h>
 #include <TBS/ECS/Components/Unit/Movement/MovementComponent.h>
+#include <TBS/ECS/Systems/Unit/MovementSystem.h>
 
 namespace acid7beast::tbs
 {
@@ -32,7 +33,7 @@ namespace acid7beast::tbs
 			return;
 		}
 
-		worldContext.logger.LogMarchStarted(worldContext.tick, id, movementComponent->GetPosition(), _targetPosition);
+		worldContext.logger.LogMarchStarted(worldContext.tick, id, movementComponent->position, _targetPosition);
 	}
 
 	BaseCommand::Status MoveCommand::Execute(Registry& registry, WorldContext& worldContext, EntityId id)
@@ -44,19 +45,19 @@ namespace acid7beast::tbs
 			return Status::Fail;
 		}
 		
-		const IVector2& currentPosition = movementComponent->GetPosition();
+		const IVector2& currentPosition = movementComponent->position;
 		if (currentPosition == _targetPosition) {
 			return Status::Fail;
 		}
 
-		const IVector2 newPosition = GetPositionInDirection(currentPosition, _targetPosition, movementComponent->GetMovementSpeed());
-		const bool isAirUnit = (movementComponent->GetTravelMethod() == TravelMethod::Air);
+		const IVector2 newPosition = GetPositionInDirection(currentPosition, _targetPosition, movementComponent->speed);
+		const bool isAirUnit = (MovementSystem::GetTravelMethod(*movementComponent) == TravelMethod::Air);
 		const bool canMove = (isAirUnit || !worldContext.map.IsCellOccupied(newPosition));
 		if (!canMove) {
 			return Status::Fail;
 		}
 
-		movementComponent->MoveTo(worldContext, id, newPosition);
+		MovementSystem::MoveTo(registry, worldContext, id, newPosition);
 		worldContext.logger.LogEntityMoved(worldContext.tick, id, newPosition);
 
 		if (newPosition == _targetPosition) {

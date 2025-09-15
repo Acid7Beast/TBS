@@ -8,6 +8,7 @@
 
 #include <TBS/ECS/Registry/Registry.h>
 #include <TBS/ECS/Components/Unit/Movement/MovementComponent.h>
+#include <TBS/ECS/Systems/Unit/MovementSystem.h>
 
 namespace acid7beast::tbs
 {
@@ -78,11 +79,11 @@ namespace acid7beast::tbs
 						continue;
 					}
 
-					if (reachability == DamageReachability::Melee && movementComponent->GetTravelMethod() != TravelMethod::Ground) {
+					if (reachability == DamageReachability::Melee && MovementSystem::GetTravelMethod(*movementComponent) != TravelMethod::Ground) {
 						continue;
 					}
 
-					if (movementComponent->GetGroundDistance() <= coneBorderDistance) {
+					if (movementComponent->groundDistance <= coneBorderDistance) {
 						entitiesInRadius.insert(eid);
 					}
 				}

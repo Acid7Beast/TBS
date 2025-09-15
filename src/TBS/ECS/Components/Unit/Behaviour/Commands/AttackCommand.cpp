@@ -9,6 +9,7 @@
 #include <TBS/ECS/Components/Unit/Movement/MovementComponent.h>
 #include <TBS/ECS/Components/Unit/Common.h>
 #include <TBS/ECS/Events/Unit/DeathEvent.h>
+#include <TBS/ECS/Systems/Unit/HealthSystem.h>
 
 #include <random>
 
@@ -36,7 +37,7 @@ namespace acid7beast::tbs
 
 			return worldContext.map.GetEntitiesInRadius(
 				registry,
-				movementComponent->GetPosition(),
+				movementComponent->position,
 				id,
 				weapon.startRange,
 				weapon.endRange + 1,
@@ -52,7 +53,7 @@ namespace acid7beast::tbs
 		if (attackComponent == nullptr) {
 			return Status::Fail;
 		}
-		for (const auto& weapon : attackComponent->GetWeapons()) {
+		for (const auto& weapon : attackComponent->weapons) {
 			const uint32_t damage = weapon.damage;
 			if (damage == 0) {
 				continue;
@@ -69,10 +70,10 @@ namespace acid7beast::tbs
 				continue;
 			}
 
-			DamageState damageState = enemyComponent->AcceptAttack(damage);
+			DamageState damageState = HealthSystem::AcceptAttack(*enemyComponent, damage);
 
 			worldContext.logger.LogEntityAttacked(
-				worldContext.tick, id, enemyId, damage, enemyComponent->GetHealth());
+				worldContext.tick, id, enemyId, damage, HealthSystem::GetHealth(*enemyComponent));
 
 			if (damageState == DamageState::Lethal) {
 				MovementComponent* enemyMovementComponent = registry.GetComponent<MovementComponent>(enemyId);

@@ -14,25 +14,31 @@ namespace acid7beast::tbs
 	class Registry;
 	struct WorldContext;
 
-	class BehaviourComponent final
+	struct BehaviourComponent final
 	{
-		// Life-circle management.
-	public:
-		BehaviourComponent();
+		std::deque<std::unique_ptr<BaseCommand>> commands;
+		
+		// Default constructor
+		BehaviourComponent() = default;
+		
+		// Copy constructor - deleted because unique_ptr is not copyable
 		BehaviourComponent(const BehaviourComponent&) = delete;
+		
+		// Copy assignment - deleted because unique_ptr is not copyable
 		BehaviourComponent& operator=(const BehaviourComponent&) = delete;
-		BehaviourComponent(BehaviourComponent&&) noexcept;
-		BehaviourComponent& operator=(BehaviourComponent&&) noexcept;
-
-		// Public interface methods.
-	public:
-		ActingState Act(Registry& registry, WorldContext& worldContext, EntityId id);
-		inline void AddCommand(std::unique_ptr<BaseCommand> command) { _commands.push_back(std::move(command)); }
-		inline void ClearCommands() { _commands.clear(); }
-		inline bool HasCommands() const { return !_commands.empty(); }
-
-		// Private state members.
-	private:
-		std::deque<std::unique_ptr<BaseCommand>> _commands;
+		
+		// Move constructor
+		BehaviourComponent(BehaviourComponent&& other) noexcept
+			: commands(std::move(other.commands))
+		{}
+		
+		// Move assignment
+		BehaviourComponent& operator=(BehaviourComponent&& other) noexcept
+		{
+			if (this != &other) {
+				commands = std::move(other.commands);
+			}
+			return *this;
+		}
 	};
 } // namespace acid7beast::tbs
